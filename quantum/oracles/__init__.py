@@ -1,0 +1,1 @@
+from deutsch import f1_1
