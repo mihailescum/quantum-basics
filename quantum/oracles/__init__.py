@@ -1,1 +1,1 @@
-from deutsch import f1_1
+from quantum.oracles.auto_oracle import AutoOracle
