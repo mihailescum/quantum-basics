@@ -68,14 +68,6 @@ def test_deutschjozsa(f, n, expected_output):
 
     result = AerSimulator().run(qc, shots=NUM_SHOTS, memory=False).result()
     counts = result.get_counts()
-    label_zero = "0" * n
-    if label_zero not in counts:
-        counts[label_zero] = 0
-
-    output = "error"
-    if counts[label_zero] == NUM_SHOTS:
-        output = "constant"
-    elif counts[label_zero] == 0:
-        output = "balanced"
+    output = algorithm.analyze_counts(counts)
 
     assert output == expected_output

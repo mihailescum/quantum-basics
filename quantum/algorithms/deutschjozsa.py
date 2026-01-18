@@ -28,3 +28,18 @@ class DeutschJozsa:
 
         qc.measure(range(self.n), range(self.n))
         return qc
+
+    def analyze_counts(self, counts) -> str:
+        label_zero = "0" * self.n
+        if label_zero not in counts:
+            counts[label_zero] = 0
+
+        num_shots = sum(counts.values())
+
+        result = "error"
+        if counts[label_zero] == num_shots:
+            result = "constant"
+        elif counts[label_zero] == 0:
+            result = "balanced"
+
+        return result
