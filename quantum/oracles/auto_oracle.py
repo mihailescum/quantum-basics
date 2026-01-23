@@ -2,14 +2,15 @@ import numpy as np
 import itertools
 
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import PermutationGate
 from qiskit.quantum_info import Statevector
 
 from quantum.utils import combine_basis_state
 
+from collections.abc import Callable
+
 
 class AutoOracle:
-    def __init__(self, f, n: int, m: int) -> None:
+    def __init__(self, f: Callable[[int], int], n: int, m: int) -> None:
         """Implements an oracle for a function f:{0,1}^n \mapsto {0,1}^m"""
         self.f = f
         self.n = n
@@ -34,5 +35,5 @@ class AutoOracle:
                     )
                 ]
             )
-            qc.unitary(self._matrix, qubits=range(self.n + self.m), label="$U_f$")
+            qc.unitary(self._matrix, qubits=range(self.n + self.m), label="Oracle")
             self.gate = qc  # .to_instruction()
