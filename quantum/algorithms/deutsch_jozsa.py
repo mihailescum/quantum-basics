@@ -4,7 +4,8 @@ from qiskit.result import Counts
 from qiskit_aer import AerSimulator
 
 from enum import Enum
-import typing
+
+from collections.abc import Callable
 
 
 class DeutschJozsa:
@@ -19,14 +20,12 @@ class DeutschJozsa:
 
         self.qc = None
 
-    def run(self, simulator: AerSimulator, **run_options: typing.Any) -> Result:
+    def run(self, run_circuit: Callable[[QuantumCircuit], Counts]) -> Result:
         if not self.qc:
             self.qc = self.build_circuit()
 
-        simulation_result = simulator.run(
-            self.qc, parameter_binds=None, run_options=run_options
-        ).result()
-        result = self._analyze_counts(simulation_result.get_counts())
+        qc_result_counts = run_circuit(self.qc)
+        result = self._analyze_counts(qc_result_counts)
         return result
 
     def build_circuit(self) -> QuantumCircuit:

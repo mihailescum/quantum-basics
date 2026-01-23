@@ -66,6 +66,11 @@ def test_deutschjozsa(f, n, expected_result):
     algorithm = DeutschJozsa(oracle.gate, n)
 
     simulator = AerSimulator()
-    result = algorithm.run(simulator, shots=NUM_SHOTS, memory=False)
+    simulate_qc = (
+        lambda qc: simulator.run(qc, shots=NUM_SHOTS, memory=False)
+        .result()
+        .get_counts()
+    )
+    result = algorithm.run(simulate_qc)
 
     assert result is expected_result
