@@ -1,7 +1,6 @@
 from qiskit import QuantumCircuit
 from qiskit.circuit import Instruction
 from qiskit.result import Counts
-from qiskit_aer import AerSimulator
 
 from enum import Enum
 
