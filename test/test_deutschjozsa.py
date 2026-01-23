@@ -51,23 +51,21 @@ def g_3(x):
 
 
 @pytest.mark.parametrize(
-    "f, n, expected_output",
+    "f, n, expected_result",
     [
-        (f_1, 1, "balanced"),
-        (g_1, 1, "constant"),
-        (f_2, 2, "balanced"),
-        (g_2, 2, "constant"),
-        (f_3, 3, "balanced"),
-        (g_3, 3, "constant"),
+        (f_1, 1, DeutschJozsa.Result.Balanced),
+        (g_1, 1, DeutschJozsa.Result.Constant),
+        (f_2, 2, DeutschJozsa.Result.Balanced),
+        (g_2, 2, DeutschJozsa.Result.Constant),
+        (f_3, 3, DeutschJozsa.Result.Balanced),
+        (g_3, 3, DeutschJozsa.Result.Constant),
     ],
 )
-def test_deutschjozsa(f, n, expected_output):
+def test_deutschjozsa(f, n, expected_result):
     oracle = AutoOracle(f, n, 1)
     algorithm = DeutschJozsa(oracle.gate, n)
-    qc = algorithm.qc
 
-    result = AerSimulator().run(qc, shots=NUM_SHOTS, memory=False).result()
-    counts = result.get_counts()
-    output = algorithm.analyze_counts(counts)
+    simulator = AerSimulator()
+    result = algorithm.run(simulator, shots=NUM_SHOTS, memory=False)
 
-    assert output == expected_output
+    assert result is expected_result

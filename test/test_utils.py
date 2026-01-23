@@ -1,4 +1,5 @@
 import pytest
+import numpy.testing as npt
 
 from quantum.utils import *
 
@@ -31,3 +32,71 @@ def test_combine_basis_state(x, y, dim_y, expected_result):
 def test_reduce_basis_state(a, dim_second, expected_result):
     result = reduce_basis_state(a, dim_second)
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "input, expected_output",
+    [
+        (
+            np.array(
+                [
+                    [0, 1, 1, 1],
+                    [0, 1, 0, 1],
+                    [1, 1, 0, 1],
+                ],
+                dtype=np.float64,
+            ),
+            np.array(
+                [
+                    [1, 1, 0, 1],
+                    [0, 1, 0, 1],
+                    [0, 0, 1, 0],
+                ],
+                dtype=np.float64,
+            ),
+        ),
+        (
+            np.array(
+                [
+                    [0, 1, 1, 1],
+                    [0, 1, 0, 1],
+                    [1, 1, 0, 1],
+                    [0, 1, 0, 1],
+                ],
+                dtype=np.float64,
+            ),
+            np.array(
+                [
+                    [1, 1, 0, 1],
+                    [0, 1, 0, 1],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 0],
+                ],
+                dtype=np.float64,
+            ),
+        ),
+        (
+            np.array(
+                [
+                    [0, 3, 1],
+                    [3, 5, 1],
+                    [5, 3, 1],
+                    [6, 7, 4],
+                ],
+                dtype=np.float64,
+            ),
+            np.array(
+                [
+                    [3, 5, 1],
+                    [0, 3, 1],
+                    [0, 0, 1.1111111],
+                    [0, 0, 0],
+                ],
+                dtype=np.float64,
+            ),
+        ),
+    ],
+)
+def test_lower_triangular_form(input, expected_output):
+    output = lower_triangular_form(input)
+    npt.assert_allclose(output, expected_output)

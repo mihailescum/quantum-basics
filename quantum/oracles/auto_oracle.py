@@ -11,7 +11,6 @@ from quantum.utils import combine_basis_state
 class AutoOracle:
     def __init__(self, f, n: int, m: int) -> None:
         """Implements an oracle for a function f:{0,1}^n \mapsto {0,1}^m"""
-        assert m <= n
         self.f = f
         self.n = n
         self.m = m
