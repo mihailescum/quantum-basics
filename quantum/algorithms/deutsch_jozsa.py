@@ -4,14 +4,15 @@ from qiskit.result import Counts
 
 from enum import Enum
 
+from quantum.algorithms import AlgorithmException
+
 from collections.abc import Callable
 
 
 class DeutschJozsa:
     class Result(Enum):
-        Error = 1
-        Constant = 2
-        Balanced = 3
+        Constant = 1
+        Balanced = 2
 
     def __init__(self, f: QuantumCircuit | Instruction, n: int):
         self.f = f
@@ -48,10 +49,9 @@ class DeutschJozsa:
 
         num_shots = sum(counts.values())
 
-        result = DeutschJozsa.Result.Error
         if counts[label_zero] == num_shots:
-            result = DeutschJozsa.Result.Constant
+            return DeutschJozsa.Result.Constant
         elif counts[label_zero] == 0:
-            result = DeutschJozsa.Result.Balanced
+            return DeutschJozsa.Result.Balanced
 
-        return result
+        raise AlgorithmException("The function is neither balanced nor constant")
