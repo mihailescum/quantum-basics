@@ -43,15 +43,12 @@ class DeutschJozsa:
         return qc
 
     def _analyze_counts(self, counts: Counts) -> Result:
-        label_zero = "0" * self.n
-        if label_zero not in counts:
-            counts[label_zero] = 0
+        zero_num_counts = counts.int_outcomes().get(0, 0)
+        num_shots = counts.shots()
 
-        num_shots = sum(counts.values())
-
-        if counts[label_zero] == num_shots:
+        if zero_num_counts == num_shots:
             return DeutschJozsa.Result.Constant
-        elif counts[label_zero] == 0:
+        elif zero_num_counts == 0:
             return DeutschJozsa.Result.Balanced
 
         raise AlgorithmException("The function is neither balanced nor constant")
