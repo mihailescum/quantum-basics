@@ -1,0 +1,2 @@
+from quantum.gates.basis_permutation_gate import BasisPermutationGate
+from quantum.gates.auto_oracle_gate import AutoOracleGate

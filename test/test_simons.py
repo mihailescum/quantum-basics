@@ -3,11 +3,12 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
+from qiskit import transpile
 from qiskit.result import Counts
 from qiskit_aer import AerSimulator
 
 from quantum.algorithms import Simons
-from quantum.oracles import AutoOracle
+from quantum.gates import AutoOracleGate
 
 
 def f(x):
@@ -84,13 +85,14 @@ def test_counts_to_bitmatrix(counts, expected_result):
     ],
 )
 def test_simons(f, n, m, expected_result):
-    oracle = AutoOracle(f, n, m)
+    def simulate_qc(qc):
+        simulator = AerSimulator()
+        qct = transpile(qc, backend=simulator)
+        return simulator.run(qct, shots=n + 10, memory=False).result().get_counts()
+
+    oracle = AutoOracleGate(f, n, m)
     algorithm = Simons(oracle.gate, n, m)
 
-    simulator = AerSimulator()
-    simulate_qc = (
-        lambda qc: simulator.run(qc, shots=n + 10, memory=False).result().get_counts()
-    )
     result = algorithm.run(simulate_qc)
 
     assert result == expected_result

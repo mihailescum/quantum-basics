@@ -1,10 +1,9 @@
 import pytest
 
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Statevector
+from helper import test_gate_using_basis, fast_unitary_of_circuit
 
-from quantum.oracles import AutoOracle
-from quantum.utils import combine_basis_state
+from quantum.gates import AutoOracleGate
+from quantum.utils import combine_basis_state, reduce_basis_state
 
 
 def f_1_1_const_zero(x: bool) -> int:
@@ -70,22 +69,14 @@ def g(x: int) -> int:
         (g, 3, 5),
     ],
 )
-def test_auto_oracle(f, n, m):
-    oracle = AutoOracle(f, n, m).gate
-    dims = 2 ** (n + m)
+def test_auto_oracle_gate(f, n, m):
+    def validation(x):
+        q_0, q_1 = reduce_basis_state(x, n)
+        r = combine_basis_state(q_0, q_1 ^ f(q_0), n)
+        return r
 
-    for k in range(0, 2**m):
-        for j in range(0, 2**n):
-            initial = Statevector.from_int(combine_basis_state(j, k, n), dims)
-            expected_result = Statevector.from_int(
-                combine_basis_state(j, k ^ f(j), n), dims
-            )
+    gate = AutoOracleGate(f, n, m)
+    qc = gate.gate
+    unitary = fast_unitary_of_circuit(qc)
 
-            qc = QuantumCircuit(n + m)
-            qc.initialize(initial)
-            qc.append(oracle, range(n + m))
-            result = Statevector(qc)
-
-            assert result.equiv(
-                expected_result
-            ), f"j={j}, k={k}, expected={expected_result}, result={result}"
+    test_gate_using_basis(unitary, validation)

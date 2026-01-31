@@ -1,9 +1,10 @@
 import pytest
 
+from qiskit import transpile
 from qiskit_aer import AerSimulator
 
 from quantum.algorithms import DeutschJozsa
-from quantum.oracles import AutoOracle
+from quantum.gates import AutoOracleGate
 
 NUM_SHOTS = 5
 
@@ -62,15 +63,14 @@ def g_3(x):
     ],
 )
 def test_deutschjozsa(f, n, expected_result):
-    oracle = AutoOracle(f, n, 1)
+    def simulate_qc(qc):
+        simulator = AerSimulator()
+        qct = transpile(qc, backend=simulator)
+        return simulator.run(qct, shots=NUM_SHOTS, memory=False).result().get_counts()
+
+    oracle = AutoOracleGate(f, n, 1)
     algorithm = DeutschJozsa(oracle.gate, n)
 
-    simulator = AerSimulator()
-    simulate_qc = (
-        lambda qc: simulator.run(qc, shots=NUM_SHOTS, memory=False)
-        .result()
-        .get_counts()
-    )
     result = algorithm.run(simulate_qc)
 
     assert result is expected_result
