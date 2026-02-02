@@ -1,6 +1,4 @@
-from qiskit import QuantumCircuit
-from qiskit.circuit import Instruction
-from qiskit.result import Counts
+import qiskit as qk
 
 import numpy as np
 
@@ -11,15 +9,17 @@ from collections.abc import Callable
 
 
 class Simons:
-    def __init__(self, f: QuantumCircuit | Instruction, n: int, m: int) -> None:
+    def __init__(
+        self, f: qk.QuantumCircuit | qk.circuit.Instruction, n: int, m: int
+    ) -> None:
         self.f = f
         self.n = n
         self.m = m
 
         self.qc = None
 
-    def build_circuit(self) -> QuantumCircuit:
-        qc = QuantumCircuit(self.n + self.m, self.n)
+    def build_circuit(self) -> qk.QuantumCircuit:
+        qc = qk.QuantumCircuit(self.n + self.m, self.n)
         qc.h(range(self.n))
         qc.compose(self.f, inplace=True)
         qc.h(range(self.n))
@@ -28,7 +28,7 @@ class Simons:
         self.qc = qc
         return qc
 
-    def run(self, run_circuit: Callable[[QuantumCircuit], Counts]) -> int:
+    def run(self, run_circuit: Callable[[qk.QuantumCircuit], qk.result.Counts]) -> int:
         if not self.qc:
             self.qc = self.build_circuit()
 
@@ -36,7 +36,7 @@ class Simons:
         result = self._analyze_counts(qc_result_counts)
         return result
 
-    def _analyze_counts(self, counts: Counts) -> int:
+    def _analyze_counts(self, counts: qk.result.Counts) -> int:
         bit_matrix = Simons._counts_to_bitmatrix(counts).astype(np.float64)
         bit_matrix = lower_triangular_form(bit_matrix)
         rank = np.where(bit_matrix.any(axis=1))[0].size
@@ -59,7 +59,7 @@ class Simons:
             s = int("".join([str(x) for x in solution_base_2]), 2)
             return s
 
-    def _counts_to_bitmatrix(counts: Counts) -> np.ndarray:
+    def _counts_to_bitmatrix(counts: qk.result.Counts) -> np.ndarray:
         x = np.array(list(counts.keys()), dtype=bytes)
         matrix = x.view("S1").reshape((x.size, -1)).astype(np.int8)
         return matrix

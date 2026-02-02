@@ -1,11 +1,17 @@
 import pytest
 
-from helper import test_gate_using_basis, fast_unitary_of_circuit
+import qiskit as qk
+
+import numba
+
+numba.config.DISABLE_JIT = 1
+
+from helper import test_gate_using_basis, fast_unitary
 
 from quantum.gates import BasisPermutationGate
 
 
-def f(x):
+def f(x: int) -> int:
     if x == 0:
         return 7
     elif x == 1:
@@ -24,7 +30,7 @@ def f(x):
         return 3
 
 
-def g(x):
+def g(x: int) -> int:
     if x == 0:
         return 1
     elif x == 1:
@@ -66,7 +72,7 @@ def g(x):
         (0, 7, 3),
     ],
 )
-def test_swap_basis_states_circuit(a, b, num_qubits):
+def test_add_swap_basis_states_circuit(a, b, num_qubits):
     def validation(x):
         if x == a:
             return b
@@ -76,8 +82,9 @@ def test_swap_basis_states_circuit(a, b, num_qubits):
             return x
 
     gate = BasisPermutationGate(lambda x: x, num_qubits)
-    qc = gate._swap_basis_states_circuit(a, b)
-    unitary = fast_unitary_of_circuit(qc)
+    qc = qk.QuantumCircuit(num_qubits)
+    gate._add_swap_basis_states_circuit(qc, a, b)
+    unitary = fast_unitary(qc)
 
     test_gate_using_basis(unitary, validation)
 
@@ -92,6 +99,7 @@ def test_swap_basis_states_circuit(a, b, num_qubits):
 )
 def test_basis_permutation_gate(f, num_qubits):
     gate = BasisPermutationGate(f, num_qubits)
-    unitary = fast_unitary_of_circuit(gate.gate)
+    native_gate = gate.get_native()
+    unitary = fast_unitary(native_gate)
 
     test_gate_using_basis(unitary, f)

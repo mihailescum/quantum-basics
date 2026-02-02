@@ -1,6 +1,10 @@
 import pytest
 import numpy.testing as npt
 
+import numba
+
+numba.config.DISABLE_JIT = 1
+
 from quantum.utils import *
 
 

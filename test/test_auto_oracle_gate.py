@@ -1,28 +1,32 @@
 import pytest
 
-from helper import test_gate_using_basis, fast_unitary_of_circuit
+import numba
+
+numba.config.DISABLE_JIT = 1
+
+from helper import test_gate_using_basis, fast_unitary
 
 from quantum.gates import AutoOracleGate
 from quantum.utils import combine_basis_state, reduce_basis_state
 
 
-def f_1_1_const_zero(x: bool) -> int:
+def f_1_1_const_zero(x: int) -> int:
     return 0
 
 
-def f_1_1_const_one(x: bool) -> int:
+def f_1_1_const_one(x: int) -> int:
     return 1
 
 
-def f_1_1_0_0(x: bool) -> int:
+def f_1_1_0_0(x: int) -> int:
     return 0 if not x else 1
 
 
-def f_1_1_0_1(x: bool) -> int:
+def f_1_1_0_1(x: int) -> int:
     return 1 if not x else 0
 
 
-def f_2_1_balanced(x: bool) -> int:
+def f_2_1_balanced(x: int) -> int:
     return 1 if x <= 1 else 0
 
 
@@ -76,7 +80,7 @@ def test_auto_oracle_gate(f, n, m):
         return r
 
     gate = AutoOracleGate(f, n, m)
-    qc = gate.gate
-    unitary = fast_unitary_of_circuit(qc)
+    native_gate = gate.get_native()
+    unitary = fast_unitary(native_gate)
 
     test_gate_using_basis(unitary, validation)

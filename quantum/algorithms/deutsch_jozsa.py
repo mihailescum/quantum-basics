@@ -1,6 +1,4 @@
-from qiskit import QuantumCircuit
-from qiskit.circuit import Instruction
-from qiskit.result import Counts
+import qiskit as qk
 
 from enum import Enum
 
@@ -14,13 +12,15 @@ class DeutschJozsa:
         Constant = 1
         Balanced = 2
 
-    def __init__(self, f: QuantumCircuit | Instruction, n: int):
+    def __init__(self, f: qk.QuantumCircuit | qk.circuit.Instruction, n: int):
         self.f = f
         self.n = n
 
         self.qc = None
 
-    def run(self, run_circuit: Callable[[QuantumCircuit], Counts]) -> Result:
+    def run(
+        self, run_circuit: Callable[[qk.QuantumCircuit], qk.result.Counts]
+    ) -> Result:
         if not self.qc:
             self.qc = self.build_circuit()
 
@@ -28,8 +28,8 @@ class DeutschJozsa:
         result = self._analyze_counts(qc_result_counts)
         return result
 
-    def build_circuit(self) -> QuantumCircuit:
-        qc = QuantumCircuit(self.n + 1, self.n)
+    def build_circuit(self) -> qk.QuantumCircuit:
+        qc = qk.QuantumCircuit(self.n + 1, self.n)
 
         qc.x(self.n)
 
@@ -42,7 +42,7 @@ class DeutschJozsa:
         self.qc = qc
         return qc
 
-    def _analyze_counts(self, counts: Counts) -> Result:
+    def _analyze_counts(self, counts: qk.result.Counts) -> Result:
         zero_num_counts = counts.int_outcomes().get(0, 0)
         num_shots = counts.shots()
 

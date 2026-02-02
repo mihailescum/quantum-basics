@@ -1,5 +1,6 @@
 from qiskit.quantum_info import Statevector
 from qiskit import QuantumCircuit, transpile
+from qiskit.circuit import Instruction
 from qiskit_aer import AerSimulator
 
 import numpy as np
@@ -34,7 +35,11 @@ def test_gate_using_basis(
         ), f"Probability of result was {result_probabilities[result_label]}"
 
 
-def fast_unitary_of_circuit(qc: QuantumCircuit):
+def fast_unitary(instruction: Instruction):
+    num_qubits = instruction.num_qubits
+
+    qc = QuantumCircuit(num_qubits)
+    qc.append(instruction, range(num_qubits))
     qc.save_unitary()
 
     simulator = AerSimulator()

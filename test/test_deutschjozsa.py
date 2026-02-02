@@ -1,5 +1,9 @@
 import pytest
 
+import numba
+
+numba.config.DISABLE_JIT = 1
+
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 
@@ -69,7 +73,8 @@ def test_deutschjozsa(f, n, expected_result):
         return simulator.run(qct, shots=NUM_SHOTS, memory=False).result().get_counts()
 
     oracle = AutoOracleGate(f, n, 1)
-    algorithm = DeutschJozsa(oracle.gate, n)
+    native_gate = oracle.get_native()
+    algorithm = DeutschJozsa(native_gate, n)
 
     result = algorithm.run(simulate_qc)
 
