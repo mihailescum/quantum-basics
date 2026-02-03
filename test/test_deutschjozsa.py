@@ -1,9 +1,5 @@
 import pytest
 
-import numba
-
-numba.config.DISABLE_JIT = 1
-
 from qiskit import transpile
 from qiskit_aer import AerSimulator
 

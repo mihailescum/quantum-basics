@@ -9,9 +9,7 @@ from collections.abc import Callable
 
 
 class Simons:
-    def __init__(
-        self, f: qk.QuantumCircuit | qk.circuit.Instruction, n: int, m: int
-    ) -> None:
+    def __init__(self, f: qk.circuit.Gate, n: int, m: int) -> None:
         self.f = f
         self.n = n
         self.m = m
@@ -21,7 +19,7 @@ class Simons:
     def build_circuit(self) -> qk.QuantumCircuit:
         qc = qk.QuantumCircuit(self.n + self.m, self.n)
         qc.h(range(self.n))
-        qc.compose(self.f, inplace=True)
+        qc.append(self.f, range(self.n + self.m))
         qc.h(range(self.n))
         qc.measure(range(self.n), range(self.n))
 

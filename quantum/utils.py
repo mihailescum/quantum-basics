@@ -1,10 +1,8 @@
 from qiskit.quantum_info import Statevector
 
 import numpy as np
-import numba
 
 
-@numba.jit(numba.int64(numba.int64, numba.int64, numba.int64))
 def combine_basis_state(q_0: int, q_1: int, dim_q0: int) -> int:
     """Given two basis states ´q_0´ and ´q_1´ in spaces of dimension ´2 ** dim_qi´
     respectively, combine them to the basis state ´|x>´ in a space of dimension ´2 ** (dim_q0 + dim_q1)´
@@ -17,7 +15,6 @@ def combine_basis_state(q_0: int, q_1: int, dim_q0: int) -> int:
     return result
 
 
-@numba.jit(numba.types.UniTuple(numba.int64, 2)(numba.int64, numba.int64))
 def reduce_basis_state(basis_state: int, dim_q0: int) -> tuple[int, int]:
     """Given a basis state ´x´ in a space of dimension ´2 ** (dim_q0 + dim_q1)´,
     decompose it into two basis states ´q_0´ and ´q_1´ in space of dimension ´2 ** dim_qi´

@@ -2,9 +2,6 @@ import pytest
 
 import numpy as np
 import numpy.testing as npt
-import numba
-
-numba.config.DISABLE_JIT = 1
 
 from qiskit import transpile
 from qiskit.result import Counts

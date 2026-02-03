@@ -1,5 +1,4 @@
 import numpy as np
-import numba
 
 import qiskit as qk
 
@@ -16,7 +15,7 @@ class BasisPermutationGate:
         self.num_qubits = num_qubits
         self._gate = None
 
-    def get_native(self) -> qk.circuit.Instruction:
+    def get_native(self) -> qk.circuit.Gate:
         """Builds a gate which is equivalent to the permutation matrix obtained by
 
         ´´´
@@ -43,10 +42,9 @@ class BasisPermutationGate:
                     )  # ,
                     # range(self.num_qubits),
                     # )
-            self._gate = qc.to_instruction()
+            self._gate = qc.to_gate()
         return self._gate
 
-    # @numba.jit(nopython=True)
     def _permutation_get_cycles(f: Callable[[int], int], num_qubits: int):
         indices = np.arange(2**num_qubits)
         current_cycle = np.full(2**num_qubits, fill_value=-1, dtype=int)

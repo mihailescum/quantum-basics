@@ -2,11 +2,7 @@ import pytest
 
 import qiskit as qk
 
-import numba
-
-numba.config.DISABLE_JIT = 1
-
-from helper import test_gate_using_basis, fast_unitary
+from helper import test_matrix_using_basis, get_matrix_representation
 
 from quantum.gates import BasisPermutationGate
 
@@ -84,9 +80,9 @@ def test_add_swap_basis_states_circuit(a, b, num_qubits):
     gate = BasisPermutationGate(lambda x: x, num_qubits)
     qc = qk.QuantumCircuit(num_qubits)
     gate._add_swap_basis_states_circuit(qc, a, b)
-    unitary = fast_unitary(qc)
+    matrix = get_matrix_representation(qc)
 
-    test_gate_using_basis(unitary, validation)
+    test_matrix_using_basis(matrix, validation)
 
 
 @pytest.mark.parametrize(
@@ -100,6 +96,6 @@ def test_add_swap_basis_states_circuit(a, b, num_qubits):
 def test_basis_permutation_gate(f, num_qubits):
     gate = BasisPermutationGate(f, num_qubits)
     native_gate = gate.get_native()
-    unitary = fast_unitary(native_gate)
+    matrix = get_matrix_representation(native_gate)
 
-    test_gate_using_basis(unitary, f)
+    test_matrix_using_basis(matrix, f)

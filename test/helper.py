@@ -1,6 +1,6 @@
 from qiskit.quantum_info import Statevector
 from qiskit import QuantumCircuit, transpile
-from qiskit.circuit import Instruction
+from qiskit.circuit import Gate
 from qiskit_aer import AerSimulator
 
 import numpy as np
@@ -14,7 +14,7 @@ def nottest(obj):
 
 
 @nottest
-def test_gate_using_basis(
+def test_matrix_using_basis(
     unitary: np.ndarray, validation: Callable[[int], int], prob_tol=1e-7
 ):
     dimension = unitary.shape[0]
@@ -35,11 +35,11 @@ def test_gate_using_basis(
         ), f"Probability of result was {result_probabilities[result_label]}"
 
 
-def fast_unitary(instruction: Instruction):
-    num_qubits = instruction.num_qubits
+def get_matrix_representation(gate: Gate):
+    num_qubits = gate.num_qubits
 
     qc = QuantumCircuit(num_qubits)
-    qc.append(instruction, range(num_qubits))
+    qc.append(gate, range(num_qubits))
     qc.save_unitary()
 
     simulator = AerSimulator()

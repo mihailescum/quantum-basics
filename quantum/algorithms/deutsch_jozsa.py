@@ -12,7 +12,7 @@ class DeutschJozsa:
         Constant = 1
         Balanced = 2
 
-    def __init__(self, f: qk.QuantumCircuit | qk.circuit.Instruction, n: int):
+    def __init__(self, f: qk.circuit.Gate, n: int):
         self.f = f
         self.n = n
 
@@ -34,7 +34,7 @@ class DeutschJozsa:
         qc.x(self.n)
 
         qc.h(range(self.n + 1))
-        qc.compose(self.f, inplace=True)
+        qc.append(self.f, range(self.n + 1))
         qc.h(range(self.n))
 
         qc.measure(range(self.n), range(self.n))

@@ -1,10 +1,6 @@
 import pytest
 
-import numba
-
-numba.config.DISABLE_JIT = 1
-
-from helper import test_gate_using_basis, fast_unitary
+from helper import test_matrix_using_basis, get_matrix_representation
 
 from quantum.gates import AutoOracleGate
 from quantum.utils import combine_basis_state, reduce_basis_state
@@ -81,6 +77,6 @@ def test_auto_oracle_gate(f, n, m):
 
     gate = AutoOracleGate(f, n, m)
     native_gate = gate.get_native()
-    unitary = fast_unitary(native_gate)
+    matrix = get_matrix_representation(native_gate)
 
-    test_gate_using_basis(unitary, validation)
+    test_matrix_using_basis(matrix, validation)
