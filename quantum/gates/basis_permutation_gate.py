@@ -49,7 +49,7 @@ class BasisPermutationGate:
         indices = np.arange(2**num_qubits)
         current_cycle = np.full(2**num_qubits, fill_value=-1, dtype=int)
         current_index = 0
-        v = indices[0]
+        v = int(indices[0])
 
         while True:
             current_cycle[current_index] = v
@@ -67,7 +67,7 @@ class BasisPermutationGate:
 
                 remaining_indices = np.nonzero(indices)[0]
                 if remaining_indices.size > 0:
-                    v = remaining_indices[0]
+                    v = int(remaining_indices[0])
                     current_index = 0
                 else:
                     return
