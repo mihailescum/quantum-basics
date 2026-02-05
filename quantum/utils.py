@@ -47,7 +47,10 @@ def unitary_from_action_on_basis(action, n) -> np.array:
     return matrix
 
 
-def get_bitmask(x, width):
+def get_bitmask(x, width, big_endian=True):
     x = np.array([np.binary_repr(x, width)], dtype=bytes)
-    mask = x.view("S1").reshape((x.size, -1)).astype(int)[0][::-1]
-    return mask
+    mask = x.view("S1").reshape((x.size, -1)).astype(int)[0]
+    if big_endian:
+        return mask[::-1]
+    else:
+        return mask

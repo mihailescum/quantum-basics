@@ -28,4 +28,3 @@ def test_add_swap_basis_states_circuit(base, mod, dim_q0, dim_q1):
     matrix = get_matrix_representation(native_gate)
 
     test_matrix_using_basis(matrix, validation)
-    pass

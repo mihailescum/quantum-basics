@@ -100,3 +100,17 @@ def test_reduce_basis_state(a, dim_second, expected_result):
 def test_lower_triangular_form(input, expected_output):
     output = lower_triangular_form(input)
     npt.assert_allclose(output, expected_output)
+
+
+@pytest.mark.parametrize(
+    "x, width, big_endian, expected_output",
+    [
+        (3, 3, True, [1, 1, 0]),
+        (3, 3, False, [0, 1, 1]),
+        (7, 5, True, [1, 1, 1, 0, 0]),
+        (7, 5, False, [0, 0, 1, 1, 1]),
+    ],
+)
+def test_get_bitmask(x, width, big_endian, expected_output):
+    output = get_bitmask(x, width, big_endian)
+    npt.assert_equal(output, expected_output)
