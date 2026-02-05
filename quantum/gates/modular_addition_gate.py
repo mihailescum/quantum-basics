@@ -2,10 +2,10 @@ import qiskit as qk
 import numpy as np
 
 from quantum.utils import get_bitmask
-from quantum.gates import FourierAdditionGate
+from quantum.gates import AdditionGate
 
 
-class ModularFourierAdditionGate:
+class ModularAdditionGate:
     """Implements the PhiADD(a)MOD(N) gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
     by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
 
@@ -23,26 +23,25 @@ class ModularFourierAdditionGate:
 
     def get_native(self) -> qk.circuit.Gate:
         if not self._gate:
-            control_reg = qk.circuit.QuantumRegister(2, "control")
             working_reg = qk.circuit.QuantumRegister(self.width + 1, "working")
             ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
-            qc = qk.QuantumCircuit(control_reg, working_reg, ancilla_reg)
+            qc = qk.QuantumCircuit(working_reg, ancilla_reg)
 
             qft = qk.circuit.library.QFTGate(working_reg.size)
             if self.apply_QFT:
                 # Put `b` into Fourier basis
                 qc.append(qft, working_reg)
 
-            fourier_add_a = FourierAdditionGate(self.a, self.width, apply_QFT=False)
-            fourier_add_N = FourierAdditionGate(self.N, self.width, apply_QFT=False)
+            fourier_add_a = AdditionGate(self.a, self.width, apply_QFT=False)
+            fourier_add_N = AdditionGate(self.N, self.width, apply_QFT=False)
 
             qc.append(
-                fourier_add_a.get_native().control(control_reg.size),
-                control_reg[:] + working_reg[:],
+                fourier_add_a.get_native(),
+                working_reg[:],
             )
             qc.append(
-                fourier_add_N.get_native().inverse().control(control_reg.size),
-                control_reg[:] + working_reg[:],
+                fourier_add_N.get_native().inverse(),
+                working_reg[:],
             )
 
             qc.append(qft.inverse(), working_reg)
@@ -54,8 +53,8 @@ class ModularFourierAdditionGate:
                 ancilla_reg[:] + working_reg[:],
             )
             qc.append(
-                fourier_add_a.get_native().inverse().control(control_reg.size),
-                control_reg[:] + working_reg[:],
+                fourier_add_a.get_native().inverse(),
+                working_reg[:],
             )
 
             qc.append(qft.inverse(), working_reg)
@@ -65,8 +64,8 @@ class ModularFourierAdditionGate:
             qc.append(qft, working_reg)
 
             qc.append(
-                fourier_add_a.get_native().control(control_reg.size),
-                control_reg[:] + working_reg[:],
+                fourier_add_a.get_native(),
+                working_reg[:],
             )
 
             if self.apply_QFT:

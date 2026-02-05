@@ -1,0 +1,53 @@
+import qiskit as qk
+import numpy as np
+
+from quantum.gates import ModularAdditionGate
+
+
+class ModularMultiplicationGate:
+    """Implements the CMULT(a)MOD(N) gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
+    by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
+
+    Given |c>, |x>, |b>, computes |c>|x>|b+(ax) mod N> if |c> = 1."""
+
+    def __init__(self, a, N, width) -> None:
+        self.a = a
+        self.N = N
+        self.width = width
+        self.num_qubits = None
+        self._gate = None
+
+    def get_native(self) -> qk.circuit.Gate:
+        if not self._gate:
+            x_reg = qk.circuit.QuantumRegister(self.width, "x")
+            b_reg = qk.circuit.QuantumRegister(self.width + 1, "b")
+            ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
+            qc = qk.QuantumCircuit(x_reg, b_reg, ancilla_reg)
+
+            # Put `b` into Fourier basis
+            qft = qk.circuit.library.QFTGate(b_reg.size)
+            qc.append(qft, b_reg)
+
+            factor = self.a
+            for bit in range(self.width):
+                mod_add = ModularAdditionGate(
+                    factor % self.N,
+                    self.N,
+                    self.width,
+                    apply_QFT=False,
+                )
+                qc.append(
+                    mod_add.get_native().control(1),
+                    [x_reg[bit]] + b_reg[:] + ancilla_reg[:],
+                )
+
+                factor *= 2
+
+            # Put `b` into compute basis
+            qc.append(qft.inverse(), b_reg)
+
+            self._gate = qc.to_gate()
+            self._gate.name = f"CMULT({self.a})MOD({self.N})"
+            self.num_qubits = self._gate.num_qubits
+
+        return self._gate

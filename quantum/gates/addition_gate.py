@@ -4,7 +4,7 @@ import numpy as np
 from quantum.utils import get_bitmask
 
 
-class FourierAdditionGate:
+class AdditionGate:
     """Implements the PhiADD(a) gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
     by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
 
