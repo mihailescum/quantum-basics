@@ -8,7 +8,9 @@ class ModularMultiplicationGate:
     """Implements the CMULT(a)MOD(N) gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
     by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
 
-    Given |c>, |x>, |b>, computes |c>|x>|b+(ax) mod N> if |c> = 1."""
+    Given classical n-bit values `a`, `N` and  |x>_n, |b>_n ⊗ |0>_1,
+    computes |x>_n ⊗ |b+(ax) mod N>_n ⊗ |0>_1. It is assumed that a,b < N.
+    """
 
     def __init__(self, a, N, width) -> None:
         self.a = a

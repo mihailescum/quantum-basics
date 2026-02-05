@@ -5,4 +5,6 @@ from quantum.gates.modular_addition_gate import ModularAdditionGate
 from quantum.gates.modular_multiplication_gate import (
     ModularMultiplicationGate,
 )
-from quantum.gates.modular_exponentiation_gate import ModularExponentiationGate
+from quantum.gates.modular_inplace_multiplication_gate import (
+    ModularInplaceMultiplicationGate,
+)

@@ -11,8 +11,9 @@ from quantum.gates import (
     AdditionGate,
     ModularAdditionGate,
     ModularMultiplicationGate,
+    ModularInplaceMultiplicationGate,
 )
-from quantum.utils import get_bitmask
+from quantum.utils import get_bitmask, combine_basis_state
 
 
 @pytest.mark.parametrize(
@@ -53,7 +54,7 @@ def test_addition_gate(a, b, width):
     expected_result = a + b
     assert outcomes.get(
         expected_result
-    ), f"Outcomes were {outcomes}, expected {expected_result}"
+    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
 
 
 @pytest.mark.parametrize(
@@ -67,8 +68,7 @@ def test_addition_gate(a, b, width):
 def test_modular_addition_gate(a, b, N, width):
     b_reg = qk.circuit.QuantumRegister(width + 1, "b")
     ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
-    measurement_reg = qk.circuit.ClassicalRegister(b_reg.size)
-    qc = qk.QuantumCircuit(b_reg, ancilla_reg, measurement_reg)
+    qc = qk.QuantumCircuit(b_reg, ancilla_reg)
 
     # Load `b` into the quantum register
     b_bit_mask = get_bitmask(b, width + 1, big_endian=True)
@@ -80,8 +80,7 @@ def test_modular_addition_gate(a, b, N, width):
     native = gate.get_native()
     qc.append(native, range(qc.num_qubits))
 
-    # Measure `b`
-    qc.measure(b_reg, measurement_reg)
+    qc.measure_all()
 
     simulator = qk_aer.AerSimulator()
     qct = qk.transpile(qc, backend=simulator)
@@ -90,9 +89,10 @@ def test_modular_addition_gate(a, b, N, width):
     )
 
     expected_result = (a + b) % N
+    expected_outcome = combine_basis_state(expected_result, 0, width + 1)
     assert outcomes.get(
-        expected_result
-    ), f"Outcomes were {outcomes}, expected {expected_result}"
+        expected_outcome
+    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
 
 
 @pytest.mark.parametrize(
@@ -107,8 +107,7 @@ def test_modular_multiplication_gate(x, a, b, N, width):
     x_reg = qk.circuit.QuantumRegister(width, "x")
     b_reg = qk.circuit.QuantumRegister(width + 1, "b")
     ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
-    measurement_reg = qk.circuit.ClassicalRegister(b_reg.size)
-    qc = qk.QuantumCircuit(x_reg, b_reg, ancilla_reg, measurement_reg)
+    qc = qk.QuantumCircuit(x_reg, b_reg, ancilla_reg)
 
     # Load `x` into the quantum register
     x_bit_mask = get_bitmask(x, width, big_endian=True)
@@ -126,8 +125,8 @@ def test_modular_multiplication_gate(x, a, b, N, width):
     native = gate.get_native()
     qc.append(native, range(qc.num_qubits))
 
-    # Measure `b`
-    qc.measure(b_reg, measurement_reg)
+    # Measure
+    qc.measure_all()
 
     simulator = qk_aer.AerSimulator()
     qct = qk.transpile(qc, backend=simulator)
@@ -136,6 +135,54 @@ def test_modular_multiplication_gate(x, a, b, N, width):
     )
 
     expected_result = (b + a * x) % N
+    expected_outcome = combine_basis_state(
+        x,
+        combine_basis_state(expected_result, 0, width + 1),
+        width,
+    )
     assert outcomes.get(
-        expected_result
-    ), f"Outcomes were {outcomes}, expected {expected_result}"
+        expected_outcome
+    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
+
+
+@pytest.mark.parametrize(
+    "x, a, N, width",
+    [
+        (3, 1, 4, 3),
+        (3, 6, 7, 3),
+        (3, 7, 20, 5),
+    ],
+)
+def test_modular_inplace_multiplication_gate(x, a, N, width):
+    x_reg = qk.circuit.QuantumRegister(width, "x")
+    ancilla_reg = qk.circuit.AncillaRegister(width + 2, "ancilla")
+    qc = qk.QuantumCircuit(x_reg, ancilla_reg)
+
+    # Load `x` into the quantum register
+    x_bit_mask = get_bitmask(x, width, big_endian=True)
+    x_flip_bits = np.where(x_bit_mask == 1)[0].tolist()
+    if len(x_flip_bits) > 0:
+        qc.x(x_reg[x_flip_bits])
+
+    gate = ModularInplaceMultiplicationGate(a, N, width)
+    native = gate.get_native()
+    qc.append(native, range(qc.num_qubits))
+
+    # Measure
+    qc.measure_all()
+
+    simulator = qk_aer.AerSimulator()
+    qct = qk.transpile(qc, backend=simulator)
+    outcomes = (
+        simulator.run(qct, shots=1, memory=False).result().get_counts().int_outcomes()
+    )
+
+    expected_result = (a * x) % N
+    expected_outcome = combine_basis_state(
+        expected_result,
+        0,
+        width,
+    )
+    assert outcomes.get(
+        expected_outcome
+    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"

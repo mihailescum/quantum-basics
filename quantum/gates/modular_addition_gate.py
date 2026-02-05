@@ -9,9 +9,8 @@ class ModularAdditionGate:
     """Implements the PhiADD(a)MOD(N) gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
     by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
 
-    Given a classical n-bit value a and a n-qubit state |phi(b)>, computes |phi((a+b) mod N)>, where
-    phi(b) is the quantum Fourier transform of b and phi(a+b) is the quantum Fourier transform
-    of a + b mod 2^n. It is assumed that a,b < N"""
+    Given classical n-bit values `a`, `N` and a `(n+1)`-qubit state `|b>_n ⊗ |0>_1`,
+    computes `|(a+b)>_{n+1}`. It is assumed that a,b < N"""
 
     def __init__(self, a, N, width, apply_QFT) -> None:
         self.a = a
