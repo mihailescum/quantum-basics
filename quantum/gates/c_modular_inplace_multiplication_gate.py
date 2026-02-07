@@ -2,16 +2,18 @@ import qiskit as qk
 
 import math
 
-from quantum.gates import ModularMultiplicationGate
+from quantum.gates import CModularMultiplicationGate
 
 
-class ModularInplaceMultiplicationGate:
+class CModularInplaceMultiplicationGate:
     """Implements the U_a gate from 'Circuit for Shor's algorithm using 2n+3 qubits'
     by Stephane Beauregard. See https://arxiv.org/abs/quant-ph/0205095
 
     Given classical n-bit values `a`, `N` and  |x>_n,
     computes |(ax) mod N>_n ⊗ |b+(ax) mod N>_n ⊗ |0>_1. It is assumed that a,b < N
     and that `gcd(a,N)=1`.
+
+    The circuit is controlled on the first qubit.
     """
 
     def __init__(self, a, N, width) -> None:
@@ -26,17 +28,19 @@ class ModularInplaceMultiplicationGate:
 
     def get_native(self) -> qk.circuit.Gate:
         if not self._gate:
+            control_reg = qk.circuit.QuantumRegister(1, "control")
             working_reg = qk.circuit.QuantumRegister(self.width, "working")
             ancilla_reg = qk.circuit.AncillaRegister(self.width + 2, "ancilla")
-            qc = qk.QuantumCircuit(working_reg, ancilla_reg)
+            qc = qk.QuantumCircuit(control_reg, working_reg, ancilla_reg)
 
-            mult_a = ModularMultiplicationGate(self.a, self.N, self.width)
+            mult_a = CModularMultiplicationGate(self.a, self.N, self.width)
             qc.append(mult_a.get_native(), range(qc.num_qubits))
 
-            qc.swap(working_reg, ancilla_reg[:-2])
+            for bit in range(working_reg.size):
+                qc.cswap(control_reg[0], working_reg[bit], ancilla_reg[bit])
 
             a_inv = pow(self.a, -1, self.N)
-            mult_a_inv = ModularMultiplicationGate(a_inv, self.N, self.width)
+            mult_a_inv = CModularMultiplicationGate(a_inv, self.N, self.width)
             qc.append(mult_a_inv.get_native().inverse(), range(qc.num_qubits))
 
             self._gate = qc.to_gate()

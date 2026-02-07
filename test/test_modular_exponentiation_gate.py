@@ -4,7 +4,7 @@ import qiskit as qk
 
 from helper import test_matrix_using_basis, get_matrix_representation
 
-from quantum.gates import ModularInplaceMultiplicationGate
+from quantum.gates import CModularInplaceMultiplicationGate
 from quantum.utils import reduce_basis_state, combine_basis_state
 
 

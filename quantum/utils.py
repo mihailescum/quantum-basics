@@ -1,3 +1,4 @@
+import string
 from qiskit.quantum_info import Statevector
 
 import numpy as np
@@ -24,6 +25,20 @@ def reduce_basis_state(basis_state: int, dim_q0: int) -> tuple[int, int]:
     q_1 = basis_state >> dim_q0
 
     return (q_0, q_1)
+
+
+def split_state(state: string, *num_bits: int):
+    state = state[::-1]
+    return tuple(
+        (
+            (
+                int(state[sum(num_bits[:i]) : sum(num_bits[: i + 1])][::-1], 2)
+                if i + 1 < len(num_bits)
+                else int(state[sum(num_bits[:i]) :][::-1], 2)
+            )
+            for i in range(len(num_bits))
+        )
+    )
 
 
 def lower_triangular_form(matrix: np.array) -> np.array:

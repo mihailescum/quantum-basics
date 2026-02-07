@@ -103,7 +103,7 @@ def test_lower_triangular_form(input, expected_output):
 
 
 @pytest.mark.parametrize(
-    "x, width, big_endian, expected_output",
+    "x, width, big_endian, expected_result",
     [
         (3, 3, True, [1, 1, 0]),
         (3, 3, False, [0, 1, 1]),
@@ -111,6 +111,19 @@ def test_lower_triangular_form(input, expected_output):
         (7, 5, False, [0, 0, 1, 1, 1]),
     ],
 )
-def test_get_bitmask(x, width, big_endian, expected_output):
+def test_get_bitmask(x, width, big_endian, expected_result):
     output = get_bitmask(x, width, big_endian)
-    npt.assert_equal(output, expected_output)
+    npt.assert_equal(output, expected_result)
+
+
+@pytest.mark.parametrize(
+    "state, num_bits, expected_result",
+    [
+        ("10", [2], (2,)),
+        ("10", [1, 1], (0, 1)),
+        ("110111011", [2, 3, 4], (3, 6, 13)),
+    ],
+)
+def test_split_state(state, num_bits, expected_result):
+    result = split_state(state, *num_bits)
+    assert result == expected_result

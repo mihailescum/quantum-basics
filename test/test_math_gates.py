@@ -9,11 +9,11 @@ from helper import test_matrix_using_basis, get_matrix_representation
 
 from quantum.gates import (
     AdditionGate,
-    ModularAdditionGate,
-    ModularMultiplicationGate,
-    ModularInplaceMultiplicationGate,
+    CCModularAdditionGate,
+    CModularMultiplicationGate,
+    CModularInplaceMultiplicationGate,
 )
-from quantum.utils import get_bitmask, combine_basis_state
+from quantum.utils import get_bitmask, combine_basis_state, split_state
 
 
 @pytest.mark.parametrize(
@@ -58,17 +58,32 @@ def test_addition_gate(a, b, width):
 
 
 @pytest.mark.parametrize(
-    "a, b, N, width",
+    "c, a, b, N, width",
     [
-        (1, 1, 2, 2),
-        (3, 3, 4, 3),
-        (4, 7, 11, 4),
+        (3, 1, 1, 2, 2),
+        (3, 3, 3, 4, 3),
+        (3, 4, 7, 11, 4),
+        (0, 1, 1, 2, 2),
+        (1, 3, 3, 4, 3),
+        (2, 4, 7, 11, 4),
     ],
 )
-def test_modular_addition_gate(a, b, N, width):
+def test_modular_addition_gate(c, a, b, N, width):
+    controls = qk.circuit.QuantumRegister(2, "controls")
     b_reg = qk.circuit.QuantumRegister(width + 1, "b")
-    ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
-    qc = qk.QuantumCircuit(b_reg, ancilla_reg)
+    ancillas = qk.circuit.AncillaRegister(1, "ancilla")
+
+    qc = qk.QuantumCircuit(
+        controls,
+        b_reg,
+        ancillas,
+    )
+
+    # Activate controls
+    c_bit_mask = get_bitmask(c, width, big_endian=True)
+    c_flip_bits = np.where(c_bit_mask == 1)[0].tolist()
+    if len(c_flip_bits) > 0:
+        qc.x(controls[c_flip_bits])
 
     # Load `b` into the quantum register
     b_bit_mask = get_bitmask(b, width + 1, big_endian=True)
@@ -76,7 +91,7 @@ def test_modular_addition_gate(a, b, N, width):
     if len(b_flip_bits) > 0:
         qc.x(b_reg[b_flip_bits])
 
-    gate = ModularAdditionGate(a, N, width, apply_QFT=True)
+    gate = CCModularAdditionGate(a, N, width, apply_QFT=True)
     native = gate.get_native()
     qc.append(native, range(qc.num_qubits))
 
@@ -84,30 +99,44 @@ def test_modular_addition_gate(a, b, N, width):
 
     simulator = qk_aer.AerSimulator()
     qct = qk.transpile(qc, backend=simulator)
-    outcomes = (
-        simulator.run(qct, shots=1, memory=False).result().get_counts().int_outcomes()
+    outcomes = simulator.run(qct, shots=1, memory=False).result().get_counts()
+    result = split_state(
+        list(outcomes.keys())[0],
+        controls.size,
+        b_reg.size,
+        ancillas.size,
     )
 
-    expected_result = (a + b) % N
-    expected_outcome = combine_basis_state(expected_result, 0, width + 1)
-    assert outcomes.get(
-        expected_outcome
-    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
+    if c == int("1" * controls.size, 2):
+        expected_result = (c, (a + b) % N, 0)
+    else:
+        expected_result = (c, b, 0)
+    assert result == expected_result, f"Result was {result}, expected {expected_result}"
 
 
 @pytest.mark.parametrize(
-    "x, a, b, N, width",
+    "c, x, a, b, N, width",
     [
-        (3, 1, 0, 4, 3),
-        (3, 6, 0, 7, 3),
-        (3, 6, 2, 21, 5),
+        (1, 3, 1, 0, 4, 3),
+        (1, 3, 6, 0, 7, 3),
+        (1, 3, 6, 2, 21, 5),
+        (0, 3, 1, 0, 4, 3),
+        (0, 3, 6, 0, 7, 3),
+        (0, 3, 6, 2, 21, 5),
     ],
 )
-def test_modular_multiplication_gate(x, a, b, N, width):
+def test_modular_multiplication_gate(c, x, a, b, N, width):
+    controls = qk.circuit.QuantumRegister(1, "controls")
     x_reg = qk.circuit.QuantumRegister(width, "x")
     b_reg = qk.circuit.QuantumRegister(width + 1, "b")
-    ancilla_reg = qk.circuit.AncillaRegister(1, "ancilla")
-    qc = qk.QuantumCircuit(x_reg, b_reg, ancilla_reg)
+    ancillas = qk.circuit.AncillaRegister(1, "ancilla")
+    qc = qk.QuantumCircuit(controls, x_reg, b_reg, ancillas)
+
+    # Activate controls
+    c_bit_mask = get_bitmask(c, width, big_endian=True)
+    c_flip_bits = np.where(c_bit_mask == 1)[0].tolist()
+    if len(c_flip_bits) > 0:
+        qc.x(controls[c_flip_bits])
 
     # Load `x` into the quantum register
     x_bit_mask = get_bitmask(x, width, big_endian=True)
@@ -121,7 +150,7 @@ def test_modular_multiplication_gate(x, a, b, N, width):
     if len(b_flip_bits) > 0:
         qc.x(b_reg[b_flip_bits])
 
-    gate = ModularMultiplicationGate(a, N, width)
+    gate = CModularMultiplicationGate(a, N, width)
     native = gate.get_native()
     qc.append(native, range(qc.num_qubits))
 
@@ -130,33 +159,46 @@ def test_modular_multiplication_gate(x, a, b, N, width):
 
     simulator = qk_aer.AerSimulator()
     qct = qk.transpile(qc, backend=simulator)
-    outcomes = (
-        simulator.run(qct, shots=1, memory=False).result().get_counts().int_outcomes()
+
+    outcomes = simulator.run(qct, shots=1, memory=False).result().get_counts()
+    result = split_state(
+        list(outcomes.keys())[0],
+        controls.size,
+        x_reg.size,
+        b_reg.size,
+        ancillas.size,
     )
 
-    expected_result = (b + a * x) % N
-    expected_outcome = combine_basis_state(
-        x,
-        combine_basis_state(expected_result, 0, width + 1),
-        width,
-    )
-    assert outcomes.get(
-        expected_outcome
-    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
+    if c == int("1" * controls.size, 2):
+        expected_result = (c, x, (b + a * x) % N, 0)
+    else:
+        expected_result = (c, x, b, 0)
+
+    assert result == expected_result, f"Result was {result}, expected {expected_result}"
 
 
 @pytest.mark.parametrize(
-    "x, a, N, width",
+    "c, x, a, N, width",
     [
-        (3, 1, 4, 3),
-        (3, 6, 7, 3),
-        (3, 7, 20, 5),
+        (1, 3, 1, 4, 3),
+        (1, 3, 6, 7, 3),
+        (1, 3, 7, 20, 5),
+        (0, 3, 1, 4, 3),
+        (0, 3, 6, 7, 3),
+        (0, 3, 7, 20, 5),
     ],
 )
-def test_modular_inplace_multiplication_gate(x, a, N, width):
+def test_modular_inplace_multiplication_gate(c, x, a, N, width):
+    controls = qk.circuit.QuantumRegister(1, "controls")
     x_reg = qk.circuit.QuantumRegister(width, "x")
-    ancilla_reg = qk.circuit.AncillaRegister(width + 2, "ancilla")
-    qc = qk.QuantumCircuit(x_reg, ancilla_reg)
+    ancillas = qk.circuit.AncillaRegister(width + 2, "ancilla")
+    qc = qk.QuantumCircuit(controls, x_reg, ancillas)
+
+    # Activate controls
+    c_bit_mask = get_bitmask(c, width, big_endian=True)
+    c_flip_bits = np.where(c_bit_mask == 1)[0].tolist()
+    if len(c_flip_bits) > 0:
+        qc.x(controls[c_flip_bits])
 
     # Load `x` into the quantum register
     x_bit_mask = get_bitmask(x, width, big_endian=True)
@@ -164,7 +206,7 @@ def test_modular_inplace_multiplication_gate(x, a, N, width):
     if len(x_flip_bits) > 0:
         qc.x(x_reg[x_flip_bits])
 
-    gate = ModularInplaceMultiplicationGate(a, N, width)
+    gate = CModularInplaceMultiplicationGate(a, N, width)
     native = gate.get_native()
     qc.append(native, range(qc.num_qubits))
 
@@ -173,16 +215,20 @@ def test_modular_inplace_multiplication_gate(x, a, N, width):
 
     simulator = qk_aer.AerSimulator()
     qct = qk.transpile(qc, backend=simulator)
-    outcomes = (
-        simulator.run(qct, shots=1, memory=False).result().get_counts().int_outcomes()
-    )
 
     expected_result = (a * x) % N
-    expected_outcome = combine_basis_state(
-        expected_result,
-        0,
-        width,
+
+    outcomes = simulator.run(qct, shots=1, memory=False).result().get_counts()
+    result = split_state(
+        list(outcomes.keys())[0],
+        controls.size,
+        x_reg.size,
+        ancillas.size,
     )
-    assert outcomes.get(
-        expected_outcome
-    ), f"Outcomes were {outcomes.keys()}, expected {expected_result}"
+
+    if c == int("1" * controls.size, 2):
+        expected_result = (c, (a * x) % N, 0)
+    else:
+        expected_result = (c, x, 0)
+
+    assert result == expected_result, f"Result was {result}, expected {expected_result}"
