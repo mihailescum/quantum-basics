@@ -99,7 +99,7 @@ class Shor:
 
     def _extract_guesses(self, outcomes: dict[int, int]) -> list[int]:
         guesses = []
-        for outcome in {k: v for k, v in outcomes.items() if k != 0}:
+        for outcome in {k: v for k, v in outcomes.items() if k not in [0, 1]}:
             phase = outcome / (pow(2, self.L))
             frac = Fraction(phase).limit_denominator(self.N)
             guesses.append(frac.denominator)
