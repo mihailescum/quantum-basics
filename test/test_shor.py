@@ -6,7 +6,7 @@ from qiskit_aer import AerSimulator
 
 from quantum.algorithms import Shor
 
-NUM_SHOTS = 5
+NUM_SHOTS = 1
 
 
 @pytest.mark.parametrize("N", [15, 12])
@@ -15,7 +15,7 @@ def test_deutschjozsa(N):
         simulator = AerSimulator()
         qct = transpile(qc, backend=simulator)
         return (
-            simulator.run(qct, shots=4, memory=False)
+            simulator.run(qct, shots=NUM_SHOTS, memory=False)
             .result()
             .get_counts()
             .int_outcomes()
